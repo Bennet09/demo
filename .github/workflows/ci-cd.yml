@@ -18,37 +18,38 @@ jobs:
       VM_SSH_KEY: ${{ secrets.VM_SSH_KEY }}
 
     steps:
-      # Step 1: Checkout the repo
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Step 2: Set up JDK 21
       - name: Set up JDK 21
         uses: actions/setup-java@v3
         with:
           distribution: temurin
           java-version: 21
 
-      # Step 3: Make mvnw executable
       - name: Make mvnw executable
         run: chmod +x mvnw
 
-      # Step 4: Run tests using H2 in-memory database
       - name: Run tests (H2)
         run: ./mvnw clean verify -Dspring.profiles.active=test
 
-      # Step 5: Build Docker image
-      - name: Build Docker image
+      # Debug Docker username
+      - name: Debug Docker username
         run: |
-          docker build -t $DOCKER_USERNAME/demo-app:latest .
+          if [ -z "$DOCKER_USERNAME" ]; then
+            echo "ERROR: DOCKER_USERNAME is empty!"
+            exit 1
+          fi
+          echo "Docker username: $DOCKER_USERNAME"
 
-      # Step 6: Login and push Docker image
+      - name: Build Docker image
+        run: docker build -t $DOCKER_USERNAME/demo-app:latest .
+
       - name: Push Docker image
         run: |
           echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
           docker push $DOCKER_USERNAME/demo-app:latest
 
-      # Step 7: Deploy to VM
       - name: Deploy to VM
         uses: appleboy/ssh-action@v0.1.7
         with:
