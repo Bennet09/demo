@@ -1,21 +1,24 @@
-# Use Eclipse Temurin OpenJDK 21
+# Use Eclipse Temurin JDK 21
 FROM eclipse-temurin:21-jdk-alpine
 
-# Set working directory inside container
+# Set working directory
 WORKDIR /app
 
-# Copy Maven project files
-COPY pom.xml .
+# Copy Maven wrapper and pom.xml first (for caching dependencies)
+COPY mvnw pom.xml ./
+COPY .mvn .mvn
+
+# Download dependencies
+RUN ./mvnw dependency:go-offline -B
+
+# Copy the source code
 COPY src ./src
 
-# Install Maven (Alpine version)
-RUN apk add --no-cache maven
+# Package the application
+RUN ./mvnw clean package -DskipTests
 
-# Build the project
-RUN mvn clean package -DskipTests
-
-# Expose port
+# Expose the port your app runs on
 EXPOSE 8080
 
-# Run the Spring Boot app
+# Run the Spring Boot jar
 ENTRYPOINT ["java","-jar","target/demo-0.0.1-SNAPSHOT.jar"]

@@ -1,33 +1,31 @@
-version: '3.9'
+version: '3.8'
 
 services:
-  postgres:
-    image: postgres:16
-    container_name: demo-postgres
-    environment:
-      POSTGRES_DB: tasksdb
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: <bennet09>/demo-app:latest
     container_name: demo-app
+    restart: always
     ports:
       - "8080:8080"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/tasksdb
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: postgres
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/demo
+      SPRING_DATASOURCE_USERNAME: demo_user
+      SPRING_DATASOURCE_PASSWORD: demo_pass
     depends_on:
-      - postgres
+      - db
+
+  db:
+    image: postgres:16
+    container_name: demo-db
+    restart: always
+    environment:
+      POSTGRES_DB: demo
+      POSTGRES_USER: demo_user
+      POSTGRES_PASSWORD: demo_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
 
 volumes:
-  pgdata:
+  db-data:
