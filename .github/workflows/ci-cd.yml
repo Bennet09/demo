@@ -36,17 +36,12 @@ jobs:
           echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
           docker push $DOCKER_USERNAME/demo-app:latest
 
-  deploy-to-vm:
+  trigger-vm-auto-pull:
     runs-on: ubuntu-latest
     needs: build-and-push
     env:
-      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-      VM_API_TOKEN: ${{ secrets.VM_API_TOKEN }} # optional
       VM_IP: ${{ secrets.VM_IP }}
     steps:
-      - name: Trigger VM to pull & run Docker image
+      - name: Notify VM to auto-pull
         run: |
-          echo "Triggering VM to auto-pull the Docker image..."
-          # This assumes your VM has a cron or webhook that auto-pulls and redeploys
-          echo "At this point, your VM should pull the Docker image automatically."
+          echo "✅ CI/CD workflow completed. Your VM should automatically pull the latest Docker image via its cron job or webhook."
