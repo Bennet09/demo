@@ -41,7 +41,25 @@ jobs:
     needs: build-and-push
     env:
       VM_IP: ${{ secrets.VM_IP }}
+      VM_USER: ${{ secrets.VM_USER }}
+      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      VM_SSH_KEY: ${{ secrets.VM_SSH_KEY }}
     steps:
-      - name: Notify VM to auto-pull
-        run: |
-          echo "✅ CI/CD workflow completed. Your VM should automatically pull the latest Docker image via its cron job or webhook."
+      - name: Trigger VM to pull latest image
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: ${{ env.VM_IP }}
+          username: ${{ env.VM_USER }}
+          key: ${{ env.VM_SSH_KEY }}
+          script: |
+            docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+            docker pull $DOCKER_USERNAME/demo-app:latest
+            docker stop demo-app || true
+            docker rm demo-app || true
+            docker run -d --name demo-app \
+              -p 8080:8080 \
+              -e SPRING_DATASOURCE_URL=jdbc:postgresql://demo-db:5432/demo \
+              -e SPRING_DATASOURCE_USERNAME=demo_user \
+              -e SPRING_DATASOURCE_PASSWORD=demo_pass \
+              $DOCKER_USERNAME/demo-app:latest
